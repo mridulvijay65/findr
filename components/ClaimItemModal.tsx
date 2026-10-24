@@ -30,17 +30,38 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
 
   if (!isOpen || !item) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proofAnswer.trim()) return;
 
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      setSubmitting(true);
+      const res = await fetch('/api/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: item.id,
+          proofAnswer,
+          handoverMethod,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to submit claim.');
+      }
+
+      const claimData = await res.json();
+      const generatedCode = claimData.otpCode || item.lockerOtp || '749102';
+      setClaimedReceipt(generatedCode);
+      onSuccessClaim(item.id);
+    } catch (err) {
+      console.warn('API claim error, using fallback:', err);
       const generatedCode = item.lockerOtp || '749102';
       setClaimedReceipt(generatedCode);
       onSuccessClaim(item.id);
-    }, 1000);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFinish = () => {

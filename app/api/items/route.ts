@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         status,
         location,
         sector: sector || 'Central Library & Cafes',
-        image: `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/400/300`,
+        image: body.image || `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/400/300`,
         description: description || '',
         lockerNumber,
         lockerOtp,

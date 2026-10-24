@@ -11,18 +11,21 @@ import { LeaderboardScreen } from '@/components/LeaderboardScreen';
 import { LockerOtpModal } from '@/components/LockerOtpModal';
 import { BroadcastRadarModal } from '@/components/BroadcastRadarModal';
 import { ClaimItemModal } from '@/components/ClaimItemModal';
-import { INITIAL_ITEMS, CampusItem } from '@/lib/campusData';
+import { SocialPosterModal } from '@/components/SocialPosterModal';
+import { CampusItem } from '@/lib/campusData';
+import { useItems } from '@/hooks/use-items';
 import { Radio, X } from 'lucide-react';
 
 export default function Home() {
   const [currentTab, setCurrentTab] = useState<string>('campus-hotspots-map');
-  const [items, setItems] = useState<CampusItem[]>(INITIAL_ITEMS);
+  const { items, loading, refetch, updateItemStatus, setItems } = useItems();
   const [selectedSector, setSelectedSector] = useState<string>('North Academic Quad');
 
   // Modals state
   const [isLockerModalOpen, setIsLockerModalOpen] = useState(false);
   const [isRadarModalOpen, setIsRadarModalOpen] = useState(false);
   const [claimModalItem, setClaimModalItem] = useState<CampusItem | null>(null);
+  const [posterModalItem, setPosterModalItem] = useState<CampusItem | null>(null);
   const [reportModalType, setReportModalType] = useState<'lost' | 'found'>('lost');
 
   // Active Broadcast Toast Alert
@@ -34,17 +37,21 @@ export default function Home() {
   };
 
   const handleItemCreated = (newItem: CampusItem) => {
-    setItems((prev) => [newItem, ...prev]);
+    setItems((prev) => [newItem, ...prev.filter((i) => i.id !== newItem.id)]);
   };
 
-  const handleSuccessClaim = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? { ...item, status: 'Claimed' }
-          : item
-      )
-    );
+  const handleSuccessClaim = async (itemId: string) => {
+    try {
+      await updateItemStatus(itemId, 'Claimed');
+    } catch {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? { ...item, status: 'Claimed' }
+            : item
+        )
+      );
+    }
   };
 
   const handleBroadcastSuccess = ({ item, sector }: { item: string; sector: string }) => {
@@ -103,6 +110,7 @@ export default function Home() {
             onOpenClaimModal={(item) => setClaimModalItem(item)}
             onOpenReportModal={handleOpenReport}
             onOpenLockerModal={() => setIsLockerModalOpen(true)}
+            onOpenPosterModal={(item) => setPosterModalItem(item)}
           />
         )}
 
@@ -147,6 +155,13 @@ export default function Home() {
         isOpen={!!claimModalItem}
         onClose={() => setClaimModalItem(null)}
         onSuccessClaim={handleSuccessClaim}
+      />
+
+      {/* Social Poster / Lost Flyer Modal */}
+      <SocialPosterModal
+        item={posterModalItem}
+        isOpen={!!posterModalItem}
+        onClose={() => setPosterModalItem(null)}
       />
     </div>
   );

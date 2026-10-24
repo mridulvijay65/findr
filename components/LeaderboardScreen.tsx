@@ -15,9 +15,12 @@ import {
   Gift
 } from 'lucide-react';
 import { KARMA_LEADERBOARD } from '@/lib/campusData';
+import { useLeaderboard } from '@/hooks/use-leaderboard';
 
 export function LeaderboardScreen() {
+  const { leaderboard: apiUsers, loading } = useLeaderboard();
   const [redeemedPerk, setRedeemedPerk] = useState<string | null>(null);
+  const users = apiUsers.length > 0 ? apiUsers : KARMA_LEADERBOARD;
 
   const perks = [
     {
@@ -54,7 +57,16 @@ export function LeaderboardScreen() {
     }
   ];
 
-  const handleRedeem = (title: string) => {
+  const handleRedeem = async (title: string, cost: number) => {
+    try {
+      await fetch('/api/users/me/karma', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perkTitle: title, pointsCost: cost }),
+      });
+    } catch (e) {
+      console.warn('Perk redemption local mode:', e);
+    }
     setRedeemedPerk(title);
     setTimeout(() => setRedeemedPerk(null), 4000);
   };
@@ -134,7 +146,7 @@ export function LeaderboardScreen() {
           </div>
 
           <div className="divide-y divide-surface-container">
-            {KARMA_LEADERBOARD.map((user) => (
+            {users.map((user) => (
               <div
                 key={user.rank}
                 className={`py-3.5 px-3 rounded-xl flex items-center justify-between transition-colors ${
@@ -235,7 +247,7 @@ export function LeaderboardScreen() {
                       <Sparkles className="w-3 h-3" /> {perk.cost} Karma
                     </span>
                     <button
-                      onClick={() => handleRedeem(perk.title)}
+                      onClick={() => handleRedeem(perk.title, perk.cost)}
                       disabled={!canAfford}
                       className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-[11px] font-bold transition-all disabled:opacity-40 cursor-pointer"
                     >

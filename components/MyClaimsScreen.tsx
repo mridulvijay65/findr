@@ -39,8 +39,15 @@ export function MyClaimsScreen({
   };
 
   const myClaimedItems = items.filter(
-    (i) => i.id === 'item-1' || i.id === 'item-2' || i.lockerOtp
+    (i) => i.status === 'Claimed' || i.lockerOtp || i.id === 'item-1' || i.id === 'item-2'
   );
+
+  const myReportedItems = items.filter(
+    (i) =>
+      i.reporter?.toLowerCase().includes('aarav') ||
+      i.reporter?.toLowerCase().includes('you') ||
+      i.id.startsWith('item-')
+  ).slice(0, 5);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 lg:px-8 py-8 space-y-6">
@@ -95,7 +102,7 @@ export function MyClaimsScreen({
               : 'border-transparent text-outline hover:text-on-surface'
           }`}
         >
-          Items Reported by Me (2)
+          Items Reported by Me ({myReportedItems.length})
         </button>
       </div>
 
@@ -169,37 +176,35 @@ export function MyClaimsScreen({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-surface-container shadow-sm p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center font-bold text-secondary">
-                #01
-              </div>
-              <div>
-                <h4 className="font-bold text-xs text-on-surface">Sony WH-1000XM4 (Black)</h4>
-                <p className="text-[11px] text-on-surface-variant">Reported Lost at Central Library 3rd Floor</p>
-                <span className="text-[10px] text-outline">Reported 24m ago · Active in Live Mesh</span>
-              </div>
+          {myReportedItems.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-surface-container p-8 text-center text-xs text-on-surface-variant">
+              You haven&apos;t filed any lost or found reports yet.
             </div>
-            <span className="px-2.5 py-1 rounded-full bg-error-container text-on-error-container text-[10px] font-bold">
-              Searching (38 nodes)
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-surface-container shadow-sm p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center font-bold text-emerald-600">
-                #02
+          ) : (
+            myReportedItems.map((item, idx) => (
+              <div key={item.id} className="bg-white rounded-2xl border border-surface-container shadow-sm p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center font-bold text-secondary font-mono text-xs">
+                    #{idx + 1}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-on-surface">{item.title}</h4>
+                    <p className="text-[11px] text-on-surface-variant">{item.location} · {item.sector}</p>
+                    <span className="text-[10px] text-outline">Reported {item.timeAgo} · Active in Cloud DB</span>
+                  </div>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                  item.status === 'Claimed'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : item.status === 'Lost'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-secondary-fixed text-on-secondary-fixed'
+                }`}>
+                  {item.status}
+                </span>
               </div>
-              <div>
-                <h4 className="font-bold text-xs text-on-surface">Casio Calculator FX-991EX</h4>
-                <p className="text-[11px] text-on-surface-variant">Found in Hall 3B · Deposited at Locker #04</p>
-                <span className="text-[10px] text-outline">Handed Over · Claimed by Rahul S.</span>
-              </div>
-            </div>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-              Reunited (+50 Karma)
-            </span>
-          </div>
+            ))
+          )}
         </div>
       )}
     </div>

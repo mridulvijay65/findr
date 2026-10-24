@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { CampusItem } from '@/lib/campusData';
+import { CampusItem, INITIAL_ITEMS } from '@/lib/campusData';
 
 interface UseItemsOptions {
   search?: string;
@@ -11,7 +11,7 @@ interface UseItemsOptions {
 }
 
 export function useItems(options: UseItemsOptions = {}) {
-  const [items, setItems] = useState<CampusItem[]>([]);
+  const [items, setItems] = useState<CampusItem[]>(INITIAL_ITEMS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +30,9 @@ export function useItems(options: UseItemsOptions = {}) {
       if (!res.ok) throw new Error('Failed to fetch items');
 
       const data = await res.json();
-      setItems(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setItems(data);
+      }
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -53,6 +55,7 @@ export function useItems(options: UseItemsOptions = {}) {
       verificationQuestion: string;
       reportType: 'lost' | 'found';
       handoverOption: string;
+      image?: string;
     }): Promise<CampusItem> => {
       const res = await fetch('/api/items', {
         method: 'POST',

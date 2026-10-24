@@ -19,6 +19,7 @@ import {
   Layers,
   Search
 } from 'lucide-react';
+import { useNotifications } from '@/hooks/use-notifications';
 
 interface NavbarProps {
   currentTab: string;
@@ -44,6 +45,8 @@ export function Navbar({
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const { notifications: liveNotifications } = useNotifications();
+
   const campusSectors = [
     'Main Campus (North Wing)',
     'Engineering & Tech Quad',
@@ -52,7 +55,7 @@ export function Navbar({
     'Hostel Village South'
   ];
 
-  const notifications = [
+  const defaultNotifications = [
     {
       id: 1,
       title: 'Match Alert: Sony Headphones',
@@ -75,6 +78,8 @@ export function Navbar({
       badge: 'Karma'
     }
   ];
+
+  const notifications = liveNotifications.length > 0 ? liveNotifications : defaultNotifications;
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-container">

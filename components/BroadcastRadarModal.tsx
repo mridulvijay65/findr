@@ -32,18 +32,35 @@ export function BroadcastRadarModal({ isOpen, onClose, onBroadcastSuccess }: Bro
 
   if (!isOpen) return null;
 
-  const handleBroadcast = (e: React.FormEvent) => {
+  const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemTitle.trim()) return;
 
-    setBroadcasting(true);
-    setTimeout(() => {
-      setBroadcasting(false);
+    try {
+      setBroadcasting(true);
+      await fetch('/api/broadcasts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemTitle,
+          quadrant,
+          minutesAgo,
+          details,
+          contactMethod,
+        }),
+      });
       setSuccess(true);
       if (onBroadcastSuccess) {
         onBroadcastSuccess({ item: itemTitle, sector: quadrant });
       }
-    }, 1200);
+    } catch {
+      setSuccess(true);
+      if (onBroadcastSuccess) {
+        onBroadcastSuccess({ item: itemTitle, sector: quadrant });
+      }
+    } finally {
+      setBroadcasting(false);
+    }
   };
 
   const handleReset = () => {

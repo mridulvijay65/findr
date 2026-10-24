@@ -15,7 +15,8 @@ import {
   CheckCircle,
   ChevronRight,
   Radio,
-  SlidersHorizontal
+  SlidersHorizontal,
+  QrCode
 } from 'lucide-react';
 import { CampusItem } from '@/lib/campusData';
 
@@ -24,6 +25,7 @@ interface LiveFeedScreenProps {
   onOpenClaimModal: (item: CampusItem) => void;
   onOpenReportModal: (type: 'lost' | 'found') => void;
   onOpenLockerModal: () => void;
+  onOpenPosterModal?: (item: CampusItem) => void;
 }
 
 export function LiveFeedScreen({
@@ -31,6 +33,7 @@ export function LiveFeedScreen({
   onOpenClaimModal,
   onOpenReportModal,
   onOpenLockerModal,
+  onOpenPosterModal,
 }: LiveFeedScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -250,13 +253,24 @@ export function LiveFeedScreen({
                   <div className="text-[11px] text-outline truncate">
                     By {item.reporter}
                   </div>
-                  <button
-                    onClick={() => onOpenClaimModal(item)}
-                    className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>Claim Item</span>
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {onOpenPosterModal && (
+                      <button
+                        onClick={() => onOpenPosterModal(item)}
+                        className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold transition-all border border-surface-container-highest cursor-pointer"
+                        title="Generate Printable / Social Flyer"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onOpenClaimModal(item)}
+                      className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Claim Item</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

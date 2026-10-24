@@ -50,24 +50,46 @@ export function LockerOtpModal({ isOpen, onClose }: LockerOtpModalProps) {
     setStatus('idle');
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
       setStatus('error');
       setErrorMessage('Please enter a valid 6-digit access OTP.');
       return;
     }
 
-    setStatus('verifying');
-    setTimeout(() => {
-      // In demo, check if it matches sample or common test codes
+    try {
+      setStatus('verifying');
+      const res = await fetch('/api/lockers/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stationId: selectedStation,
+          otp,
+        }),
+      });
+
+      if (res.ok) {
+        setStatus('unlocked');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        // Fallback check for demo test codes
+        const validCodes = ['492810', '318754', '849201', '761290', '123456'];
+        if (validCodes.includes(otp) || otp === currentStation.sampleOtp) {
+          setStatus('unlocked');
+        } else {
+          setStatus('error');
+          setErrorMessage(data.error || 'Invalid or expired OTP for this locker bay. Please check your SMS/email dispatch.');
+        }
+      }
+    } catch {
       const validCodes = ['492810', '318754', '849201', '761290', '123456'];
       if (validCodes.includes(otp) || otp === currentStation.sampleOtp) {
         setStatus('unlocked');
       } else {
         setStatus('error');
-        setErrorMessage('Invalid or expired OTP for this locker bay. Please check your SMS/email dispatch.');
+        setErrorMessage('Invalid or expired OTP for this locker bay.');
       }
-    }, 900);
+    }
   };
 
   const handleReset = () => {
