@@ -1,0 +1,6 @@
+{
+  "name": "findr.campus - Campus Lost & Found Radar",
+  "description": "Hyper-local campus recovery grid reconnecting students and staff with misplaced essentials, featuring live hotspot radar, safe handover lockers, smart routine matcher, and peer broadcast alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

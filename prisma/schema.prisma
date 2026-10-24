@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  department     String
+  avatar         String   @default("")
+  karmaPoints    Int      @default(0)
+  itemsReunited  Int      @default(0)
+  badge          String   @default("Newcomer")
+  rank           Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  items          Item[]
+  claims         Claim[]
+  broadcasts     Broadcast[]
+  notifications  Notification[]
+}
+
+model Item {
+  id                   String   @id @default(cuid())
+  title                String
+  category             String   // 'Electronics' | 'IDs & Cards' | 'Keys & Tags' | 'Bottles & Tumblers' | 'Stationery & Books' | 'Wearables & Apparel'
+  status               String   // 'Lost' | 'In Locker' | 'Awaiting Owner' | 'Claimed'
+  location             String
+  sector               String   // 'North Academic Quad' | 'Engineering Cluster' | 'Sports Complex' | 'Hostel Village' | 'Central Library & Cafes'
+  image                String   @default("")
+  description          String   @default("")
+  lockerNumber         String?
+  lockerOtp            String?
+  karmaReward          Int      @default(25)
+  verificationQuestion String?
+  handoverOption       String   @default("locker") // 'locker' | 'security' | 'direct'
+
+  reporterId           String
+  reporter             User     @relation(fields: [reporterId], references: [id])
+
+  claims               Claim[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Claim {
+  id              String   @id @default(cuid())
+  proofAnswer     String
+  handoverMethod  String   @default("locker") // 'locker' | 'security'
+  status          String   @default("pending") // 'pending' | 'approved' | 'rejected'
+  otpCode         String?
+
+  itemId          String
+  item            Item     @relation(fields: [itemId], references: [id])
+
+  claimantId      String
+  claimant        User     @relation(fields: [claimantId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model LockerStation {
+  id               String   @id @default(cuid())
+  name             String
+  location         String
+  totalLockers     Int
+  availableLockers Int
+  status           String   @default("Online") // 'Online' | 'Maintenance'
+  supportedAccess  String
+  activeItem       String?
+  sampleOtp        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Broadcast {
+  id            String   @id @default(cuid())
+  itemTitle     String
+  quadrant      String
+  minutesAgo    String
+  details       String   @default("")
+  contactMethod String   @default("app") // 'app' | 'phone'
+
+  broadcasterId String
+  broadcaster   User     @relation(fields: [broadcasterId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  badge       String   @default("")
+  read        Boolean  @default(false)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
+model RecoveryStory {
+  id          String   @id @default(cuid())
+  itemTitle   String
+  quote       String
+  handoverBy  String
+  karma       Int
+  createdAt   DateTime @default(now())
+}
