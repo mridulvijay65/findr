@@ -12,7 +12,7 @@ interface LeaderboardUser {
   badge: string;
 }
 
-export function useLeaderboard() {
+export function useLeaderboard(userId?: string) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,8 @@ export function useLeaderboard() {
   const fetchLeaderboard = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/leaderboard');
+      const url = userId ? `/api/leaderboard?userId=${userId}` : '/api/leaderboard';
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch leaderboard');
       const data = await res.json();
       setLeaderboard(data);
@@ -30,7 +31,7 @@ export function useLeaderboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchLeaderboard();

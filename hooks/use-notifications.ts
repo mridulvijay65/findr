@@ -11,7 +11,7 @@ interface Notification {
   time: string;
 }
 
-export function useNotifications() {
+export function useNotifications(userId?: string) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,8 @@ export function useNotifications() {
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/notifications');
+      const url = userId ? `/api/notifications?userId=${userId}` : '/api/notifications';
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch notifications');
       const data = await res.json();
       setNotifications(data);
@@ -29,7 +30,7 @@ export function useNotifications() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchNotifications();

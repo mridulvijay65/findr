@@ -20,7 +20,7 @@ import { useAuth } from '@/context/auth-context';
 
 export function LeaderboardScreen() {
   const { user: currentUser } = useAuth();
-  const { leaderboard: apiUsers, loading } = useLeaderboard();
+  const { leaderboard: apiUsers, loading } = useLeaderboard(currentUser.id);
   const [redeemedPerk, setRedeemedPerk] = useState<string | null>(null);
   const users = apiUsers.length > 0 ? apiUsers : KARMA_LEADERBOARD;
 
@@ -61,11 +61,15 @@ export function LeaderboardScreen() {
 
   const handleRedeem = async (title: string, cost: number) => {
     try {
-      await fetch('/api/users/me/karma', {
+      const res = await fetch('/api/users/me/karma', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ perkTitle: title, pointsCost: cost }),
+        body: JSON.stringify({ perkTitle: title, cost, userId: currentUser.id }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        console.warn('Redemption notice:', data.error);
+      }
     } catch (e) {
       console.warn('Perk redemption local mode:', e);
     }

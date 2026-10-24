@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 // GET /api/notifications - Get user notifications
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = 'user-aarav';
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || 'user-aarav';
 
     const notifications = await prisma.notification.findMany({
       where: { userId },

@@ -1,9 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 // GET /api/leaderboard - Get karma leaderboard
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const currentUserId = searchParams.get('userId');
+
     const users = await prisma.user.findMany({
       orderBy: { karmaPoints: 'desc' },
       take: 20,
@@ -20,15 +23,18 @@ export async function GET() {
     });
 
     // Recalculate ranks based on karma order
-    const leaderboard = users.map((user, index) => ({
-      rank: index + 1,
-      name: user.name + (user.id === 'user-aarav' ? ' (You)' : ''),
-      department: user.department,
-      itemsReunited: user.itemsReunited,
-      karmaPoints: user.karmaPoints,
-      avatar: user.avatar,
-      badge: user.badge,
-    }));
+    const leaderboard = users.map((user, index) => {
+      const isCurrentUser = currentUserId ? user.id === currentUserId : user.id === 'user-aarav';
+      return {
+        rank: index + 1,
+        name: user.name + (isCurrentUser ? ' (You)' : ''),
+        department: user.department,
+        itemsReunited: user.itemsReunited,
+        karmaPoints: user.karmaPoints,
+        avatar: user.avatar,
+        badge: user.badge,
+      };
+    });
 
     return NextResponse.json(leaderboard);
   } catch (error) {

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = 'user-aarav';
+    const userId = body.broadcasterId || body.userId || 'user-aarav';
 
     const broadcast = await prisma.broadcast.create({
       data: {

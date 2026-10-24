@@ -14,6 +14,7 @@ import {
   Sparkles,
   Users
 } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 
 interface BroadcastRadarModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface BroadcastRadarModalProps {
 }
 
 export function BroadcastRadarModal({ isOpen, onClose, onBroadcastSuccess }: BroadcastRadarModalProps) {
+  const { user } = useAuth();
   const [itemTitle, setItemTitle] = useState('');
   const [quadrant, setQuadrant] = useState('Central Library Quad');
   const [minutesAgo, setMinutesAgo] = useState('15');
@@ -47,6 +49,7 @@ export function BroadcastRadarModal({ isOpen, onClose, onBroadcastSuccess }: Bro
           minutesAgo,
           details,
           contactMethod,
+          broadcasterId: user.id,
         }),
       });
       setSuccess(true);

@@ -25,15 +25,19 @@ export async function GET(
       id: item.id,
       title: item.title,
       category: item.category,
+      itemType: item.itemType,
       status: item.status,
       location: item.location,
       sector: item.sector,
       image: item.image,
       description: item.description,
+      brand: item.brand,
+      color: item.color,
       lockerNumber: item.lockerNumber,
-      lockerOtp: item.lockerOtp,
+      // lockerOtp is excluded for zero-trust security
       karmaReward: item.karmaReward,
       reporter: item.reporter.name,
+      reporterId: item.reporter.id,
       verificationQuestion: item.verificationQuestion,
       createdAt: item.createdAt,
     });
@@ -43,7 +47,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/items/[id] - Update item status
+// PATCH /api/items/[id] - Update item status with authorization
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -51,11 +55,41 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, userId } = body;
+
+    if (!status) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
+    // Verify item exists
+    const existing = await prisma.item.findUnique({
+      where: { id },
+      include: { reporter: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    }
+
+    // If caller provided userId, check authorization
+    if (userId) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const isOwner = existing.reporterId === userId;
+      const isSecurity = user?.role === 'security';
+      if (!isOwner && !isSecurity) {
+        return NextResponse.json(
+          { error: 'Forbidden: You are not authorized to update this item status.' },
+          { status: 403 }
+        );
+      }
+    }
 
     const item = await prisma.item.update({
       where: { id },
-      data: { status },
+      data: {
+        status,
+        resolvedAt: status === 'Recovered' || status === 'Claimed' ? new Date() : undefined,
+      },
       include: {
         reporter: {
           select: { id: true, name: true },
@@ -67,15 +101,19 @@ export async function PATCH(
       id: item.id,
       title: item.title,
       category: item.category,
+      itemType: item.itemType,
       status: item.status,
       location: item.location,
       sector: item.sector,
       image: item.image,
       description: item.description,
+      brand: item.brand,
+      color: item.color,
       lockerNumber: item.lockerNumber,
-      lockerOtp: item.lockerOtp,
+      // lockerOtp is excluded for zero-trust security
       karmaReward: item.karmaReward,
       reporter: item.reporter.name,
+      reporterId: item.reporter.id,
       verificationQuestion: item.verificationQuestion,
     });
   } catch (error) {

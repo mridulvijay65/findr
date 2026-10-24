@@ -5,7 +5,9 @@ import { prisma } from '@/lib/db';
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { perkTitle, cost } = body;
+    const perkTitle = body.perkTitle;
+    const cost = body.cost || body.pointsCost;
+    const userId = body.userId || 'user-aarav';
 
     if (!perkTitle || !cost) {
       return NextResponse.json(
@@ -13,8 +15,6 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const userId = 'user-aarav';
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

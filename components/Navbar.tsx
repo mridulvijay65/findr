@@ -51,14 +51,14 @@ export function Navbar({
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const { user, logout } = useAuth();
-  const { notifications: liveNotifications } = useNotifications();
+  const { notifications: liveNotifications } = useNotifications(user.id);
 
   const campusSectors = [
-    'Main Campus (North Wing)',
-    'Engineering & Tech Quad',
-    'Sports & Recreation Arena',
+    'North Academic Quad',
+    'Engineering Cluster',
+    'Sports Complex',
     'Central Library & Cafes',
-    'Hostel Village South'
+    'Hostel Village'
   ];
 
   const defaultNotifications = [
