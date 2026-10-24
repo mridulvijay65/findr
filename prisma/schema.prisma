@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema for findr.campus
+// Database: PostgreSQL (Neon Serverless)
 
 generator client {
   provider = "prisma-client-js"
@@ -19,54 +19,101 @@ model User {
   karmaPoints    Int      @default(0)
   itemsReunited  Int      @default(0)
   badge          String   @default("Newcomer")
+  role           String   @default("student") // 'student' | 'security' | 'faculty'
   rank           Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  items          Item[]
-  claims         Claim[]
-  broadcasts     Broadcast[]
-  notifications  Notification[]
+  items           Item[]
+  claims          Claim[]
+  broadcasts      Broadcast[]
+  notifications   Notification[]
+  reviewedMatches Match[]        @relation("MatchReviewer")
 }
 
 model Item {
-  id                   String   @id @default(cuid())
+  id                   String    @id @default(cuid())
   title                String
-  category             String   // 'Electronics' | 'IDs & Cards' | 'Keys & Tags' | 'Bottles & Tumblers' | 'Stationery & Books' | 'Wearables & Apparel'
-  status               String   // 'Lost' | 'In Locker' | 'Awaiting Owner' | 'Claimed'
+  category             String    // 'Electronics' | 'IDs & Cards' | 'Keys & Tags' | 'Bottles & Tumblers' | 'Stationery & Books' | 'Wearables & Apparel'
+  itemType             String    @default("LOST") // 'LOST' | 'FOUND'
+  status               String    // 'Lost' | 'In Locker' | 'Awaiting Owner' | 'Claimed' | 'Recovered'
   location             String
-  sector               String   // 'North Academic Quad' | 'Engineering Cluster' | 'Sports Complex' | 'Hostel Village' | 'Central Library & Cafes'
-  image                String   @default("")
-  description          String   @default("")
+  sector               String    // 'North Academic Quad' | 'Engineering Cluster' | 'Sports Complex' | 'Hostel Village' | 'Central Library & Cafes'
+  image                String    @default("")
+  description          String    @default("")
+  brand                String?
+  color                String?
   lockerNumber         String?
-  lockerOtp            String?
-  karmaReward          Int      @default(25)
+  lockerOtp            String?   // Server-side encrypted or masked in public APIs!
+  karmaReward          Int       @default(25)
   verificationQuestion String?
-  handoverOption       String   @default("locker") // 'locker' | 'security' | 'direct'
+  handoverOption       String    @default("locker") // 'locker' | 'security' | 'direct'
+  dateLostOrFound      DateTime  @default(now())
+  resolvedAt           DateTime?
 
   reporterId           String
-  reporter             User     @relation(fields: [reporterId], references: [id])
+  reporter             User      @relation(fields: [reporterId], references: [id])
 
   claims               Claim[]
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  lostMatches          Match[]   @relation("LostItemMatches")
+  foundMatches         Match[]   @relation("FoundItemMatches")
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 model Claim {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   proofAnswer     String
-  handoverMethod  String   @default("locker") // 'locker' | 'security'
-  status          String   @default("pending") // 'pending' | 'approved' | 'rejected'
+  handoverMethod  String    @default("locker") // 'locker' | 'security' | 'direct'
+  status          String    @default("pending") // 'pending' | 'approved' | 'rejected' | 'collected'
   otpCode         String?
+  otpExpiresAt    DateTime?
+  attemptCount    Int       @default(0)
+  reviewNotes     String?
+  reviewedAt      DateTime?
+  resolvedAt      DateTime?
 
   itemId          String
-  item            Item     @relation(fields: [itemId], references: [id])
+  item            Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   claimantId      String
-  claimant        User     @relation(fields: [claimantId], references: [id])
+  claimant        User      @relation(fields: [claimantId], references: [id])
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Match {
+  id              String    @id @default(cuid())
+  lostItemId      String
+  lostItem        Item      @relation("LostItemMatches", fields: [lostItemId], references: [id], onDelete: Cascade)
+
+  foundItemId     String
+  foundItem       Item      @relation("FoundItemMatches", fields: [foundItemId], references: [id], onDelete: Cascade)
+
+  score           Float     // Calibrated multi-signal score 0 - 100
+  confidence      String    // 'HIGH' | 'MEDIUM' | 'LOW'
+  signals         Json      // { textScore, spatialScore, temporalScore, attributeScore, reasons, warnings }
+  status          String    @default("SUGGESTED") // 'SUGGESTED' | 'CONFIRMED' | 'DISMISSED'
+
+  reviewedById    String?
+  reviewedBy      User?     @relation("MatchReviewer", fields: [reviewedById], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([lostItemId, foundItemId])
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  action      String    // 'CLAIM_SUBMITTED' | 'CLAIM_APPROVED' | 'CLAIM_REJECTED' | 'OTP_ATTEMPT' | 'LOCKER_UNLOCKED' | 'ITEM_RECOVERED'
+  userId      String?
+  targetId    String?
+  details     Json?
+  ipHash      String?
+  createdAt   DateTime  @default(now())
 }
 
 model LockerStation {

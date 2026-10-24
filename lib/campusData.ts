@@ -2,16 +2,20 @@ export interface CampusItem {
   id: string;
   title: string;
   category: 'Electronics' | 'IDs & Cards' | 'Keys & Tags' | 'Bottles & Tumblers' | 'Stationery & Books' | 'Wearables & Apparel';
-  status: 'Lost' | 'In Locker' | 'Awaiting Owner' | 'Claimed';
+  itemType?: 'LOST' | 'FOUND';
+  status: 'Lost' | 'In Locker' | 'Awaiting Owner' | 'Claimed' | 'Recovered';
   location: string;
   sector: 'North Academic Quad' | 'Engineering Cluster' | 'Sports Complex' | 'Hostel Village' | 'Central Library & Cafes';
   timeAgo: string;
   image: string;
   description: string;
+  brand?: string | null;
+  color?: string | null;
   lockerNumber?: string;
   lockerOtp?: string;
   karmaReward: number;
   reporter: string;
+  reporterId?: string;
   verificationQuestion?: string;
 }
 

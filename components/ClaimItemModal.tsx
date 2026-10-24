@@ -11,9 +11,12 @@ import {
   KeyRound, 
   Building2, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { CampusItem } from '@/lib/campusData';
+import { useAuth } from '@/context/auth-context';
 
 interface ClaimItemModalProps {
   item: CampusItem | null;
@@ -23,19 +26,30 @@ interface ClaimItemModalProps {
 }
 
 export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimItemModalProps) {
+  const { user } = useAuth();
   const [proofAnswer, setProofAnswer] = useState('');
   const [handoverMethod, setHandoverMethod] = useState<'locker' | 'security'>('locker');
   const [submitting, setSubmitting] = useState(false);
-  const [claimedReceipt, setClaimedReceipt] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen || !item) return null;
+
+  const isSelfItem = item.reporterId === user.id || item.reporter?.toLowerCase().includes(user.name.toLowerCase().split(' ')[0]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proofAnswer.trim()) return;
 
+    if (isSelfItem) {
+      setErrorMessage('Security Violation: You cannot file an ownership claim on an item you reported.');
+      return;
+    }
+
     try {
       setSubmitting(true);
+      setErrorMessage(null);
+
       const res = await fetch('/api/claims', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,30 +57,29 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
           itemId: item.id,
           proofAnswer,
           handoverMethod,
+          claimantId: user.id,
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error('Failed to submit claim.');
+        throw new Error(data.error || 'Failed to submit ownership claim.');
       }
 
-      const claimData = await res.json();
-      const generatedCode = claimData.otpCode || item.lockerOtp || '749102';
-      setClaimedReceipt(generatedCode);
+      setIsSuccess(true);
       onSuccessClaim(item.id);
-    } catch (err) {
-      console.warn('API claim error, using fallback:', err);
-      const generatedCode = item.lockerOtp || '749102';
-      setClaimedReceipt(generatedCode);
-      onSuccessClaim(item.id);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Something went wrong submitting your claim.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleFinish = () => {
-    setClaimedReceipt(null);
+    setIsSuccess(false);
     setProofAnswer('');
+    setErrorMessage(null);
     onClose();
   };
 
@@ -81,12 +94,12 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
             </div>
             <div>
               <h3 className="font-headline font-bold text-base text-white">Item Ownership Verification</h3>
-              <p className="text-xs text-outline-variant">Verified ID Matching Protocol</p>
+              <p className="text-xs text-outline-variant">Two-Way Zero-Trust Custody Protocol</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -94,7 +107,7 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
 
         {/* Content */}
         <div className="p-6">
-          {claimedReceipt ? (
+          {isSuccess ? (
             <div className="text-center py-4 space-y-4 animate-in zoom-in-95 duration-200">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
                 <CheckCircle2 className="w-8 h-8 animate-bounce" />
@@ -102,55 +115,40 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
 
               <div>
                 <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-2">
-                  Claim Verified & Approved
+                  Claim Submitted for Verification
                 </span>
-                <h4 className="font-headline font-extrabold text-xl text-on-surface">Ownership Confirmed!</h4>
+                <h4 className="font-headline font-extrabold text-xl text-on-surface">Proof Under Review!</h4>
                 <p className="text-xs text-on-surface-variant max-w-sm mx-auto mt-1">
-                  Your identity details matched the recorded item custody log for <strong>{item.title}</strong>.
+                  Your ownership details for <strong>{item.title}</strong> have been forwarded to the finder (<strong>{item.reporter}</strong>).
                 </p>
               </div>
 
-              {/* Handover Voucher Box */}
+              {/* Status Box */}
               <div className="bg-surface-container-low p-4 rounded-xl text-left border border-surface-container max-w-sm mx-auto space-y-3">
                 <div className="flex items-center justify-between text-xs pb-2 border-b border-surface-container">
                   <span className="text-outline">Collection Method:</span>
                   <span className="font-bold text-on-surface">
-                    {handoverMethod === 'locker' ? 'Safe Handover Locker Vault' : 'North Security Alpha Post'}
+                    {handoverMethod === 'locker' ? 'Smart Locker Vault' : 'Security Desk Alpha'}
                   </span>
                 </div>
 
-                {handoverMethod === 'locker' ? (
-                  <div className="text-center py-2 bg-white rounded-lg border border-secondary-container/40 p-3">
-                    <span className="text-[11px] font-semibold text-outline uppercase tracking-wider block">
-                      Your 6-Digit Locker OTP
-                    </span>
-                    <span className="font-mono text-2xl font-extrabold text-secondary tracking-widest block my-1">
-                      {claimedReceipt}
-                    </span>
-                    <span className="text-[11px] text-on-surface-variant">
-                      Valid at: {item.lockerNumber || 'Safe Locker #02'} (Central Library Quad)
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-left text-xs space-y-1 bg-white p-3 rounded-lg border border-surface-container">
-                    <div className="font-bold text-on-surface">Present at Desk: Ref #{item.id.toUpperCase()}</div>
-                    <div className="text-on-surface-variant text-[11px]">Officer Martinez on duty · Central Gate Alpha</div>
-                    <div className="text-outline text-[10px]">Hours: 24/7 with valid Student ID card</div>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-xs pt-1">
-                  <span className="text-outline">Security Status:</span>
-                  <span className="font-bold text-emerald-600">Dispense Authorized</span>
+                <div className="text-center py-2 bg-white rounded-lg border border-secondary-container/40 p-3">
+                  <Clock className="w-5 h-5 text-amber-500 mx-auto mb-1 animate-pulse" />
+                  <span className="text-[11px] font-bold text-on-surface block">
+                    Awaiting Finder Proof Confirmation
+                  </span>
+                  <span className="text-[10px] text-outline block mt-0.5">
+                    Once approved, your 6-digit access OTP will be unlocked in your &quot;My Claims&quot; dashboard.
+                  </span>
                 </div>
               </div>
 
               <div className="flex gap-2 justify-center pt-2">
                 <button
                   onClick={handleFinish}
-                  className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-md"
+                  className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-white text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
-                  Save Pass & View My Claims
+                  Go to My Claims & Dashboard
                 </button>
               </div>
             </div>
@@ -170,14 +168,28 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs text-on-surface truncate">{item.title}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-error-container text-on-error-container">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed">
                       {item.status}
                     </span>
                   </div>
                   <p className="text-[11px] text-on-surface-variant truncate">{item.location}</p>
-                  <span className="text-[10px] text-outline">Reported {item.timeAgo} · {item.sector}</span>
+                  <span className="text-[10px] text-outline">Reported by {item.reporter} · {item.sector}</span>
                 </div>
               </div>
+
+              {isSelfItem && (
+                <div className="p-3 bg-amber-50 text-amber-800 text-xs rounded-xl border border-amber-200 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <span>You reported this item. You cannot claim your own reported item.</span>
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
               {/* Security Verification Question */}
               <div>
@@ -189,7 +201,7 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                   rows={2}
                   value={proofAnswer}
                   onChange={(e) => setProofAnswer(e.target.value)}
-                  placeholder="Provide precise details only the rightful owner would know..."
+                  placeholder="Provide precise details only the rightful owner would know (e.g. engravings, wallpaper, scratch marks, inner card initials)..."
                   className="w-full text-xs px-3 py-2 rounded-lg border border-surface-container-highest bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -203,9 +215,9 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                   <button
                     type="button"
                     onClick={() => setHandoverMethod('locker')}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
+                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       handoverMethod === 'locker'
-                        ? 'border-primary bg-primary/5 shadow-sm'
+                        ? 'border-primary bg-primary/5 shadow-xs'
                         : 'border-surface-container hover:bg-surface-container-low'
                     }`}
                   >
@@ -214,16 +226,16 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                       <span>Safe Locker OTP</span>
                     </div>
                     <span className="text-[10px] text-on-surface-variant">
-                      Instant 24/7 contactless pick up with one-time passcode.
+                      Instant 24/7 contactless pick up with one-time passcode upon approval.
                     </span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setHandoverMethod('security')}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
+                    className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                       handoverMethod === 'security'
-                        ? 'border-primary bg-primary/5 shadow-sm'
+                        ? 'border-primary bg-primary/5 shadow-xs'
                         : 'border-surface-container hover:bg-surface-container-low'
                     }`}
                   >
@@ -232,7 +244,7 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                       <span>Security Post Desk</span>
                     </div>
                     <span className="text-[10px] text-on-surface-variant">
-                      Pick up in-person from Campus Officer Martinez.
+                      Pick up in-person with Campus Officer Martinez at Gate Alpha.
                     </span>
                   </button>
                 </div>
@@ -242,24 +254,24 @@ export function ClaimItemModal({ item, isOpen, onClose, onSuccessClaim }: ClaimI
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-lg bg-surface-container text-xs font-bold text-on-surface hover:bg-surface-container-high transition-colors"
+                  className="flex-1 py-2.5 rounded-lg bg-surface-container text-xs font-bold text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !proofAnswer.trim()}
+                  disabled={submitting || !proofAnswer.trim() || isSelfItem}
                   className="flex-1 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                      <span>Verifying Answers...</span>
+                      <span>Submitting Proof...</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-4 h-4 text-secondary" />
-                      <span>Confirm & Issue Retrieval OTP</span>
+                      <span>Submit Ownership Proof</span>
                     </>
                   )}
                 </button>

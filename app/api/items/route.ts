@@ -42,21 +42,25 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Transform to match the frontend CampusItem interface
+    // Transform to match the frontend CampusItem interface (NEVER leak lockerOtp in public GET!)
     const transformedItems = items.map((item) => ({
       id: item.id,
       title: item.title,
       category: item.category,
+      itemType: item.itemType,
       status: item.status,
       location: item.location,
       sector: item.sector,
       timeAgo: getTimeAgo(item.createdAt),
       image: item.image,
       description: item.description,
+      brand: item.brand,
+      color: item.color,
       lockerNumber: item.lockerNumber,
-      lockerOtp: item.lockerOtp,
+      // lockerOtp is deliberately excluded from public GET for zero-trust security
       karmaReward: item.karmaReward,
       reporter: item.reporter.name,
+      reporterId: item.reporter.id,
       verificationQuestion: item.verificationQuestion,
     }));
 
@@ -81,21 +85,27 @@ export async function POST(request: NextRequest) {
       reportType,
       handoverOption,
       reporterId,
+      brand,
+      color,
+      dateLostOrFound,
     } = body;
 
     if (!title || !location) {
       return NextResponse.json({ error: 'Title and location are required' }, { status: 400 });
     }
 
+    const isFound = reportType === 'found';
+    const itemType = isFound ? 'FOUND' : 'LOST';
+
     // Determine status based on report type and handover option
     let status = 'Lost';
-    if (reportType === 'found') {
+    if (isFound) {
       status = handoverOption === 'locker' ? 'In Locker' : 'Awaiting Owner';
     }
 
-    // Generate locker details if applicable
-    const lockerNumber = handoverOption === 'locker' ? 'Safe Locker #05' : undefined;
-    const lockerOtp = handoverOption === 'locker'
+    // Generate locker deposit details if finder chose smart locker
+    const lockerNumber = isFound && handoverOption === 'locker' ? 'Safe Locker #05' : undefined;
+    const lockerOtp = isFound && handoverOption === 'locker'
       ? Math.floor(100000 + Math.random() * 900000).toString()
       : undefined;
 
@@ -105,16 +115,20 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         category: category || 'Electronics',
+        itemType,
         status,
         location,
         sector: sector || 'Central Library & Cafes',
         image: body.image || `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/400/300`,
         description: description || '',
+        brand: brand || null,
+        color: color || null,
         lockerNumber,
         lockerOtp,
-        karmaReward: reportType === 'found' ? 50 : 25,
+        karmaReward: isFound ? 50 : 25,
         verificationQuestion: verificationQuestion || 'Describe unique identifying features',
         handoverOption: handoverOption || 'locker',
+        dateLostOrFound: dateLostOrFound ? new Date(dateLostOrFound) : new Date(),
         reporterId: userId,
       },
       include: {
@@ -125,7 +139,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Award karma for found items
-    if (reportType === 'found') {
+    if (isFound) {
       await prisma.user.update({
         where: { id: userId },
         data: {
@@ -134,21 +148,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Transform to match frontend
+    // Run AI matching pipeline asynchronously to populate Match records in DB
+    try {
+      const { runMatchingForReport } = await import('@/lib/matching-engine');
+      await runMatchingForReport(item.id);
+    } catch (matchErr) {
+      console.warn('Initial matching non-critical warning:', matchErr);
+    }
+
+    // Transform response (deposit locker OTP only given to the finder directly as deposit receipt)
     const transformedItem = {
       id: item.id,
       title: item.title,
       category: item.category,
+      itemType: item.itemType,
       status: item.status,
       location: item.location,
       sector: item.sector,
       timeAgo: 'Just now',
       image: item.image,
       description: item.description,
+      brand: item.brand,
+      color: item.color,
       lockerNumber: item.lockerNumber,
-      lockerOtp: item.lockerOtp,
+      lockerOtp: isFound ? item.lockerOtp : undefined,
       karmaReward: item.karmaReward,
       reporter: item.reporter.name,
+      reporterId: item.reporter.id,
       verificationQuestion: item.verificationQuestion,
     };
 

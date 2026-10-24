@@ -172,7 +172,7 @@ export function Navbar({
         <nav className="hidden lg:flex items-center gap-1 bg-surface-container-low p-1 rounded-full border border-surface-container">
           <button
             onClick={() => setCurrentTab('live-feed')}
-            className={`font-semibold text-xs px-3.5 py-2 rounded-full transition-all ${
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer ${
               currentTab === 'live-feed'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
@@ -182,8 +182,20 @@ export function Navbar({
           </button>
 
           <button
+            onClick={() => setCurrentTab('match-center')}
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer flex items-center gap-1.5 ${
+              currentTab === 'match-center'
+                ? 'bg-secondary text-on-secondary shadow-sm'
+                : 'text-secondary hover:bg-secondary/10'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>AI Matches</span>
+          </button>
+
+          <button
             onClick={() => setCurrentTab('report-item')}
-            className={`font-semibold text-xs px-3.5 py-2 rounded-full transition-all ${
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer ${
               currentTab === 'report-item'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
@@ -194,35 +206,46 @@ export function Navbar({
 
           <button
             onClick={() => setCurrentTab('my-claims')}
-            className={`font-semibold text-xs px-3.5 py-2 rounded-full transition-all ${
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer ${
               currentTab === 'my-claims'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
             }`}
           >
-            My Claims & Posts
+            My Claims
           </button>
 
           <button
             onClick={() => setCurrentTab('campus-hotspots-map')}
-            className={`font-semibold text-xs px-4 py-2 rounded-full transition-all ${
+            className={`font-semibold text-xs px-3.5 py-2 rounded-full transition-all cursor-pointer ${
               currentTab === 'campus-hotspots-map'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
             }`}
           >
-            Campus Hotspots Map
+            Campus Map
+          </button>
+
+          <button
+            onClick={() => setCurrentTab('analytics')}
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer ${
+              currentTab === 'analytics'
+                ? 'bg-primary text-on-primary shadow-sm'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            Analytics
           </button>
 
           <button
             onClick={() => setCurrentTab('leaderboard')}
-            className={`font-semibold text-xs px-3.5 py-2 rounded-full transition-all ${
+            className={`font-semibold text-xs px-3 py-2 rounded-full transition-all cursor-pointer ${
               currentTab === 'leaderboard'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
             }`}
           >
-            Leaderboard / Good Karma
+            Karma
           </button>
         </nav>
 
@@ -466,6 +489,18 @@ export function Navbar({
             </button>
             <button
               onClick={() => {
+                setCurrentTab('match-center');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-between ${
+                currentTab === 'match-center' ? 'bg-secondary text-on-secondary' : 'text-secondary hover:bg-secondary/10'
+              }`}
+            >
+              <span>AI Match Center</span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => {
                 setCurrentTab('live-feed');
                 setMobileMenuOpen(false);
               }}
@@ -495,7 +530,18 @@ export function Navbar({
                 currentTab === 'my-claims' ? 'bg-primary text-on-primary' : 'text-on-surface hover:bg-surface-container'
               }`}
             >
-              My Claims & Posts
+              My Claims & Reviews
+            </button>
+            <button
+              onClick={() => {
+                setCurrentTab('analytics');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold ${
+                currentTab === 'analytics' ? 'bg-primary text-on-primary' : 'text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              Recovery Analytics
             </button>
             <button
               onClick={() => {

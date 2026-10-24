@@ -15,6 +15,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { LOCKER_STATIONS } from '@/lib/campusData';
+import { useAuth } from '@/context/auth-context';
 
 interface LockerOtpModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface LockerOtpModalProps {
 }
 
 export function LockerOtpModal({ isOpen, onClose }: LockerOtpModalProps) {
+  const { user } = useAuth();
   const [selectedStation, setSelectedStation] = useState(LOCKER_STATIONS[0].id);
   const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<'idle' | 'verifying' | 'unlocked' | 'error'>('idle');
@@ -65,6 +67,7 @@ export function LockerOtpModal({ isOpen, onClose }: LockerOtpModalProps) {
         body: JSON.stringify({
           stationId: selectedStation,
           otp,
+          userId: user.id,
         }),
       });
 

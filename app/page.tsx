@@ -8,6 +8,8 @@ import { LiveFeedScreen } from '@/components/LiveFeedScreen';
 import { ReportScreen } from '@/components/ReportScreen';
 import { MyClaimsScreen } from '@/components/MyClaimsScreen';
 import { LeaderboardScreen } from '@/components/LeaderboardScreen';
+import { MatchCenterScreen } from '@/components/MatchCenterScreen';
+import { AnalyticsScreen } from '@/components/AnalyticsScreen';
 import { LockerOtpModal } from '@/components/LockerOtpModal';
 import { BroadcastRadarModal } from '@/components/BroadcastRadarModal';
 import { ClaimItemModal } from '@/components/ClaimItemModal';
@@ -129,6 +131,15 @@ export default function Home() {
             onOpenReportModal={handleOpenReport}
           />
         )}
+
+        {currentTab === 'match-center' && (
+          <MatchCenterScreen
+            onOpenClaimModal={(item) => setClaimModalItem(item)}
+            onOpenReportModal={handleOpenReport}
+          />
+        )}
+
+        {currentTab === 'analytics' && <AnalyticsScreen />}
 
         {currentTab === 'leaderboard' && <LeaderboardScreen />}
       </main>
