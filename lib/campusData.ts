@@ -297,7 +297,7 @@ export const KARMA_LEADERBOARD: KarmaUser[] = [
     department: 'Computer Science · 2nd Yr',
     itemsReunited: 8,
     karmaPoints: 420,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAdz9ajjOFDIL3XIM5dw-yYh-Bha-8ls7ZBAxiwPqH1CefwquNohcflZZDJ0u4XHwYS8rHY_bMIDcnWP9DXqGD7ksICQSqGD6SAEXrKn_2DIivPE0Lr5Iw1QxJJroaH_-ZQD1atih_2DKLT_ccNShf0S2XGoDurzHDqr6GLFYaqq9OWwQl_olqQlSRhASqzku31T35flkPPyLGSQqgAkdAZa0OO1AXG2F6I8nqGkodBhZswiva7NbUYRg',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=faces',
     badge: 'Quad Ambassador'
   },
   {

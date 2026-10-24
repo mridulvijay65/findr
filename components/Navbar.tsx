@@ -330,7 +330,7 @@ export function Navbar({
                 <div className="flex items-center gap-2.5 pb-3 border-b border-surface-container">
                   <div className="w-10 h-10 rounded-full overflow-hidden relative ring-2 ring-secondary-container">
                     <Image
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdz9ajjOFDIL3XIM5dw-yYh-Bha-8ls7ZBAxiwPqH1CefwquNohcflZZDJ0u4XHwYS8rHY_bMIDcnWP9DXqGD7ksICQSqGD6SAEXrKn_2DIivPE0Lr5Iw1QxJJroaH_-ZQD1atih_2DKLT_ccNShf0S2XGoDurzHDqr6GLFYaqq9OWwQl_olqQlSRhASqzku31T35flkPPyLGSQqgAkdAZa0OO1AXG2F6I8nqGkodBhZswiva7NbUYRg"
+                      src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=faces"
                       alt="Aarav"
                       fill
                       className="object-cover"
