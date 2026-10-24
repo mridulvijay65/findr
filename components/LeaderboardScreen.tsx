@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { KARMA_LEADERBOARD } from '@/lib/campusData';
 import { useLeaderboard } from '@/hooks/use-leaderboard';
+import { useAuth } from '@/context/auth-context';
 
 export function LeaderboardScreen() {
+  const { user: currentUser } = useAuth();
   const { leaderboard: apiUsers, loading } = useLeaderboard();
   const [redeemedPerk, setRedeemedPerk] = useState<string | null>(null);
   const users = apiUsers.length > 0 ? apiUsers : KARMA_LEADERBOARD;
@@ -81,8 +83,8 @@ export function LeaderboardScreen() {
           <div className="flex items-center gap-4">
             <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden ring-4 ring-secondary-container flex-shrink-0 shadow-lg">
               <Image
-                src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=faces"
-                alt="Aarav"
+                src={currentUser.avatar}
+                alt={currentUser.name}
                 fill
                 className="object-cover"
                 referrerPolicy="no-referrer"
@@ -90,15 +92,15 @@ export function LeaderboardScreen() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-headline font-black text-xl sm:text-2xl text-white">Aarav Verma</h1>
+                <h1 className="font-headline font-black text-xl sm:text-2xl text-white">{currentUser.name}</h1>
                 <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed text-[10px] font-extrabold uppercase">
-                  Rank #4
+                  {currentUser.role === 'security' ? 'Security Chief' : 'Verified Student'}
                 </span>
               </div>
-              <p className="text-xs text-outline-variant mt-0.5">Computer Science Dept · Class of 2027</p>
+              <p className="text-xs text-outline-variant mt-0.5">{currentUser.department}</p>
               <div className="flex items-center gap-3 mt-2 text-xs text-white/90">
                 <span className="flex items-center gap-1 font-bold text-secondary-container">
-                  <Sparkles className="w-4 h-4" /> 420 Karma Points
+                  <Sparkles className="w-4 h-4" /> {currentUser.karmaPoints} Karma Points
                 </span>
                 <span>·</span>
                 <span>8 Misplaced Items Reunited</span>
@@ -112,7 +114,7 @@ export function LeaderboardScreen() {
             <Trophy className="w-6 h-6 text-secondary-container" />
             <div>
               <div className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Badge Tier</div>
-              <div className="font-headline font-bold text-sm text-white">Quad Ambassador</div>
+              <div className="font-headline font-bold text-sm text-white">{currentUser.badge}</div>
             </div>
           </div>
         </div>

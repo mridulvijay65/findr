@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from '@/context/auth-context';
+
 export default function RootLayout({
   children,
 }: {
@@ -37,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`}>
       <body className="bg-surface text-on-surface antialiased selection:bg-secondary-fixed selection:text-on-secondary-fixed min-h-screen flex flex-col" suppressHydrationWarning>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

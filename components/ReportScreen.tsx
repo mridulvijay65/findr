@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { CampusItem } from '@/lib/campusData';
+import { useAuth } from '@/context/auth-context';
 
 interface ReportScreenProps {
   initialType?: 'lost' | 'found';
@@ -31,6 +32,7 @@ export function ReportScreen({
   onItemCreated,
   onNavigateToMap,
 }: ReportScreenProps) {
+  const { user } = useAuth();
   const [reportType, setReportType] = useState<'lost' | 'found'>(initialType);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<CampusItem['category']>('Electronics');
@@ -175,6 +177,7 @@ export function ReportScreen({
           reportType,
           handoverOption,
           image: imagePreview || undefined,
+          reporterId: user.id,
         }),
       });
 

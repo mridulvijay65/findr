@@ -17,9 +17,13 @@ import {
   Award,
   Clock,
   Layers,
-  Search
+  Search,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useAuth } from '@/context/auth-context';
+import { AuthModal } from '@/components/AuthModal';
 
 interface NavbarProps {
   currentTab: string;
@@ -44,7 +48,9 @@ export function Navbar({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  const { user, logout } = useAuth();
   const { notifications: liveNotifications } = useNotifications();
 
   const campusSectors = [
@@ -307,44 +313,44 @@ export function Navbar({
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
               className="flex items-center gap-2 pl-1 py-1 hover:bg-surface-container-low rounded-full transition-colors text-left"
             >
-              <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-surface-container-high">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-secondary-container">
                 <Image
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdz9ajjOFDIL3XIM5dw-yYh-Bha-8ls7ZBAxiwPqH1CefwquNohcflZZDJ0u4XHwYS8rHY_bMIDcnWP9DXqGD7ksICQSqGD6SAEXrKn_2DIivPE0Lr5Iw1QxJJroaH_-ZQD1atih_2DKLT_ccNShf0S2XGoDurzHDqr6GLFYaqq9OWwQl_olqQlSRhASqzku31T35flkPPyLGSQqgAkdAZa0OO1AXG2F6I8nqGkodBhZswiva7NbUYRg"
-                  alt="Aarav Profile"
+                  src={user.avatar}
+                  alt={user.name}
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div className="hidden md:flex flex-col text-left pr-1">
-                <span className="text-xs font-bold text-on-surface leading-tight">Aarav</span>
+                <span className="text-xs font-bold text-on-surface leading-tight">{user.name.split(' ')[0]}</span>
                 <span className="text-[10px] text-on-surface-variant flex items-center">
-                  CS Dept <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
+                  {user.role === 'security' ? 'Security' : user.department.split('·')[0]} <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
                 </span>
               </div>
             </button>
 
             {/* Profile Dropdown */}
             {profileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-surface-container-lowest rounded-xl shadow-2xl border border-surface-container-highest p-3 z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-surface-container-lowest rounded-xl shadow-2xl border border-surface-container-highest p-3 z-50 animate-in fade-in zoom-in-95">
                 <div className="flex items-center gap-2.5 pb-3 border-b border-surface-container">
-                  <div className="w-10 h-10 rounded-full overflow-hidden relative ring-2 ring-secondary-container">
+                  <div className="w-10 h-10 rounded-full overflow-hidden relative ring-2 ring-secondary-container flex-shrink-0">
                     <Image
-                      src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=faces"
-                      alt="Aarav"
+                      src={user.avatar}
+                      alt={user.name}
                       fill
                       className="object-cover"
                       referrerPolicy="no-referrer"
                     />
                   </div>
-                  <div>
-                    <div className="font-bold text-xs text-on-surface">Aarav Verma</div>
-                    <div className="text-[11px] text-outline">aarav.v@campus.edu</div>
+                  <div className="truncate">
+                    <div className="font-bold text-xs text-on-surface truncate">{user.name}</div>
+                    <div className="text-[11px] text-outline truncate">{user.email}</div>
                     <div className="mt-1 flex items-center gap-1.5">
                       <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-secondary-fixed text-on-secondary-fixed text-[9px] font-bold">
-                        <Sparkles className="w-2.5 h-2.5" /> 420 Karma
+                        <Sparkles className="w-2.5 h-2.5" /> {user.karmaPoints} Karma
                       </span>
-                      <span className="text-[9px] text-secondary font-bold">Level 4</span>
+                      <span className="text-[9px] text-secondary font-bold uppercase tracking-wider">{user.role}</span>
                     </div>
                   </div>
                 </div>
@@ -352,10 +358,21 @@ export function Navbar({
                 <div className="py-2 space-y-1">
                   <button
                     onClick={() => {
+                      setAuthModalOpen(true);
+                      setProfileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-primary font-bold hover:bg-primary/10 rounded-md flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-primary" />
+                    <span>⚡ Switch Role / Sign In</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
                       setCurrentTab('my-claims');
                       setProfileMenuOpen(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2 cursor-pointer"
                   >
                     <Layers className="w-3.5 h-3.5 text-outline" />
                     <span>My Claims & Reports</span>
@@ -365,7 +382,7 @@ export function Navbar({
                       onOpenLockerModal();
                       setProfileMenuOpen(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2 cursor-pointer"
                   >
                     <Lock className="w-3.5 h-3.5 text-outline" />
                     <span>Open Safe Locker with OTP</span>
@@ -375,11 +392,24 @@ export function Navbar({
                       setCurrentTab('leaderboard');
                       setProfileMenuOpen(false);
                     }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2"
+                    className="w-full text-left px-2.5 py-1.5 text-xs text-on-surface hover:bg-surface-container rounded-md flex items-center gap-2 cursor-pointer"
                   >
                     <Award className="w-3.5 h-3.5 text-outline" />
                     <span>Karma Perks & Rewards</span>
                   </button>
+
+                  <div className="pt-1 border-t border-surface-container">
+                    <button
+                      onClick={() => {
+                        logout();
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -481,6 +511,12 @@ export function Navbar({
           </div>
         </div>
       )}
+
+      {/* Campus Auth & Role Switcher Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </header>
   );
 }
